@@ -46,6 +46,7 @@ import br.gov.frameworkdemoiselle.certificate.keystore.loader.KeyStoreLoader;
 import br.gov.frameworkdemoiselle.certificate.keystore.loader.KeyStoreLoaderException;
 import br.gov.frameworkdemoiselle.certificate.keystore.loader.PKCS11NotFoundException;
 import br.gov.frameworkdemoiselle.certificate.keystore.loader.factory.KeyStoreLoaderFactory;
+
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -53,10 +54,12 @@ import java.awt.Rectangle;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyListener;
 import java.security.KeyStore;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
@@ -81,7 +84,12 @@ public class JKeyStoreDialog extends JDialog {
     private final JScrollPane scrollPane = new JScrollPane();
     private final JButton runButton = new JButton();
     private final JButton cancelButton = new JButton();
-    private final JTable table = new JTable();
+    private final JFileChooser fileChooser= new JFileChooser();
+    public JFileChooser getFileChooser() {
+		return fileChooser;
+	}
+
+	private final JTable table = new JTable();
     private KeyStore keystore = null;
     private ListaCertificadosModel listaCertificadosModel = null;
     private boolean loaded = false;
@@ -166,8 +174,11 @@ public class JKeyStoreDialog extends JDialog {
             cancelButton.setText(AppletConfig.LABEL_DIALOG_BUTTON_CANCEL.getValue());
             cancelButton.setFont(new Font(AppletConfig.CONFIG_DIALOG_FONT.getValue(), AppletConfig.CONFIG_DIALOG_FONT_STYLE.getValueInt(), AppletConfig.CONFIG_DIALOG_FONT_SIZE.getValueInt()));
             cancelButton.setBounds(new Rectangle(AppletConfig.CONFIG_DIALOG_BUTTON_CANCEL_X.getValueInt(), AppletConfig.CONFIG_DIALOG_BUTTON_CANCEL_Y.getValueInt(), AppletConfig.CONFIG_DIALOG_BUTTON_CANCEL_WIDTH.getValueInt(), AppletConfig.CONFIG_DIALOG_BUTTON_CANCEL_HEIGHT.getValueInt()));
-
+            fileChooser.setFont(new Font(AppletConfig.CONFIG_DIALOG_FONT.getValue(),AppletConfig.CONFIG_DIALOG_FONT_STYLE.getValueInt(), AppletConfig.CONFIG_DIALOG_FONT_SIZE.getValueInt()));
+            fileChooser.setToolTipText("Selecione o arquivo para assinar.");
+            
             this.add(scrollPane, null);
+            this.add(fileChooser, null);
             this.add(runButton, null);
             this.add(cancelButton, null);
 

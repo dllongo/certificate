@@ -156,7 +156,7 @@ public class JPanelApplet extends JApplet {
             if (keystore != null) {
                 String className = this.getParameter(AppletConfig.PARAM_APPLET_ACTION_EXECUTE.getKey());
                 AppletExecute appletExecute = AppletExecuteFactory.factory(className);
-                appletExecute.execute(keystore, alias, this);
+                appletExecute.execute(keystore, alias, this,keyStorePanel.getFileName().getText());
             }
         } catch (FactoryException e) {
             e.printStackTrace();

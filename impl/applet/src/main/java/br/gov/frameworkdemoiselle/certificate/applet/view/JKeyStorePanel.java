@@ -36,6 +36,33 @@
  */
 package br.gov.frameworkdemoiselle.certificate.applet.view;
 
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyListener;
+import java.io.File;
+import java.security.KeyStore;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.border.Border;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.TableColumn;
+
 import br.gov.frameworkdemoiselle.certificate.applet.config.AppletConfig;
 import br.gov.frameworkdemoiselle.certificate.applet.handler.PinCallbackHandler;
 import br.gov.frameworkdemoiselle.certificate.applet.tiny.Item;
@@ -46,239 +73,303 @@ import br.gov.frameworkdemoiselle.certificate.keystore.loader.KeyStoreLoader;
 import br.gov.frameworkdemoiselle.certificate.keystore.loader.KeyStoreLoaderException;
 import br.gov.frameworkdemoiselle.certificate.keystore.loader.PKCS11NotFoundException;
 import br.gov.frameworkdemoiselle.certificate.keystore.loader.factory.KeyStoreLoaderFactory;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Rectangle;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyListener;
-import java.security.KeyStore;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.border.Border;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.table.TableColumn;
 
-public class JKeyStorePanel extends JPanel {
+public class JKeyStorePanel extends JPanel implements ActionListener {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private final JLabel certificatesLabel = new JLabel();
-    private final JScrollPane scrollPane = new JScrollPane();
-    private final JButton runButton = new JButton();
-    private final JButton cancelButton = new JButton();
-    private final JTable table = new JTable();
-    private KeyStore keystore = null;
-    private ListaCertificadosModel listaCertificadosModel = null;
-    private boolean loaded = false;
+	private final JLabel certificatesLabel = new JLabel();
+	private final JScrollPane scrollPane = new JScrollPane();
+	private final JButton runButton = new JButton();
+	private final JButton file = new JButton();
+	private final JTextField fileName = new JTextField();
+	private final JFileChooser fileChooser = new JFileChooser();
 
-    /**
-     * Construtor. Aciona a inicializacao dos demais componentes
-     */
-    public JKeyStorePanel() {
-        init();
-    }
+	private final JButton cancelButton = new JButton();
+	private final JTable table = new JTable();
+	private KeyStore keystore = null;
+	private ListaCertificadosModel listaCertificadosModel = null;
+	private boolean loaded = false;
 
-    /**
-     * Indica se o keystore foi carregado com sucesso.
-     *
-     * @return True, se for carregado com sucesso. False se contrario.
-     */
-    public boolean isLoaded() {
-        return loaded;
-    }
+	/**
+	 * Construtor. Aciona a inicializacao dos demais componentes
+	 */
+	public JKeyStorePanel() {
+		init();
+	}
 
-    /**
-     * Inicializacao dos componentes
-     */
-    private void init() {
-        mountGUI();
-    }
+	/**
+	 * Indica se o keystore foi carregado com sucesso.
+	 *
+	 * @return True, se for carregado com sucesso. False se contrario.
+	 */
+	public boolean isLoaded() {
+		return loaded;
+	}
 
-    private void mountGUI() {
+	/**
+	 * Inicializacao dos componentes
+	 */
+	private void init() {
+		mountGUI();
+	}
 
-        try {
-            this.setLayout(null);
-            this.setSize(getDimension());
+	 public static void main(String[] args) {
+	 // Schedule a job for the event dispatch thread:
+	 // creating and showing this application's GUI.
+	 SwingUtilities.invokeLater(new Runnable() {
+	 public void run() {
+	 // Turn off metal's use of bold fonts
+	 UIManager.put("swing.boldMetal", Boolean.FALSE);
+	 JFrame frame = new JFrame("FileChooserDemo");
+	 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	
+	 // Add content to the window.
+	 frame.add(new JKeyStorePanel());
+	
+	 // Display the window.
+	 frame.pack();
+	 frame.setVisible(true);
+	 ;
+	 }
+	 });
+	 }
 
-            // Label da tabela de certificados
-            certificatesLabel.setText(AppletConfig.CONFIG_DIALOG_LABEL_TABLE.getValue());
-            Border loweredetched = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
-            TitledBorder title = BorderFactory.createTitledBorder(loweredetched, certificatesLabel.getText());
-            title.setTitleJustification(TitledBorder.CENTER);
-            title.setTitleFont(new Font(AppletConfig.CONFIG_DIALOG_FONT.getValue(), AppletConfig.CONFIG_DIALOG_FONT_STYLE.getValueInt(), AppletConfig.CONFIG_DIALOG_FONT_SIZE.getValueInt()));
-            this.setBorder(title);
+	private void mountGUI() {
 
-            // Configura a Tabela de Certificados
-            listaCertificadosModel = new ListaCertificadosModel();
-            listaCertificadosModel.populate(this.getKeyStore());
-            table.setModel(listaCertificadosModel);
+		try {
+			this.setLayout(null);
+			this.setSize(getDimension());
 
-            if (table.getRowCount() == 0) {
-                runButton.setEnabled(false);
-            } else {
-                table.setRowSelectionInterval(0, 0);
-            }
+			// Label da tabela de certificados
+			certificatesLabel.setText(AppletConfig.CONFIG_DIALOG_LABEL_TABLE.getValue());
+			Border loweredetched = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
+			TitledBorder title = BorderFactory.createTitledBorder(loweredetched, certificatesLabel.getText());
+			title.setTitleJustification(TitledBorder.CENTER);
+			title.setTitleFont(new Font(AppletConfig.CONFIG_DIALOG_FONT.getValue(), AppletConfig.CONFIG_DIALOG_FONT_STYLE.getValueInt(),
+					AppletConfig.CONFIG_DIALOG_FONT_SIZE.getValueInt()));
+			this.setBorder(title);
 
-            table.getTableHeader().setFont(new Font(AppletConfig.CONFIG_DIALOG_FONT.getValue(), AppletConfig.CONFIG_DIALOG_FONT_STYLE.getValueInt(), AppletConfig.CONFIG_DIALOG_FONT_SIZE.getValueInt()));
-            table.setFont(new Font(AppletConfig.CONFIG_DIALOG_FONT.getValue(), AppletConfig.CONFIG_DIALOG_FONT_STYLE.getValueInt(), AppletConfig.CONFIG_DIALOG_FONT_SIZE.getValueInt()));
-            table.setBounds(AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_X.getValueInt(), AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_Y.getValueInt(), AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_WIDTH.getValueInt(), AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_HEIGHT.getValueInt());
-            table.setMinimumSize(new Dimension(AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_WIDTH.getValueInt(), AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_HEIGHT.getValueInt()));
-            table.setRowHeight(AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_ROW_HEIGHT.getValueInt());
-            table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+			// Configura a Tabela de Certificados
+			listaCertificadosModel = new ListaCertificadosModel();
+			listaCertificadosModel.populate(this.getKeyStore());
+			table.setModel(listaCertificadosModel);
 
-            // Dimensiona cada coluna separadamente
-            TableColumn tc1 = table.getColumnModel().getColumn(0);
-            tc1.setPreferredWidth(200);
+			if (table.getRowCount() == 0) {
+				runButton.setEnabled(false);
+			} else {
+				table.setRowSelectionInterval(0, 0);
+			}
 
-            TableColumn tc2 = table.getColumnModel().getColumn(1);
-            tc2.setPreferredWidth(140);
+			table.getTableHeader().setFont(
+					new Font(AppletConfig.CONFIG_DIALOG_FONT.getValue(), AppletConfig.CONFIG_DIALOG_FONT_STYLE.getValueInt(),
+							AppletConfig.CONFIG_DIALOG_FONT_SIZE.getValueInt()));
+			table.setFont(new Font(AppletConfig.CONFIG_DIALOG_FONT.getValue(), AppletConfig.CONFIG_DIALOG_FONT_STYLE.getValueInt(),
+					AppletConfig.CONFIG_DIALOG_FONT_SIZE.getValueInt()));
+			table.setBounds(AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_X.getValueInt(), AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_Y.getValueInt(),
+					AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_WIDTH.getValueInt(), AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_HEIGHT.getValueInt());
+			table.setMinimumSize(new Dimension(AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_WIDTH.getValueInt(),
+					AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_HEIGHT.getValueInt()));
+			table.setRowHeight(AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_ROW_HEIGHT.getValueInt());
+			table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-            TableColumn tc3 = table.getColumnModel().getColumn(2);
-            tc3.setPreferredWidth(140);
+			// Dimensiona cada coluna separadamente
+			TableColumn tc1 = table.getColumnModel().getColumn(0);
+			tc1.setPreferredWidth(200);
 
-            TableColumn tc4 = table.getColumnModel().getColumn(3);
-            tc4.setPreferredWidth(250);
+			TableColumn tc2 = table.getColumnModel().getColumn(1);
+			tc2.setPreferredWidth(140);
 
-            // Configura o Painel
-            scrollPane.setBounds(AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_X.getValueInt(), AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_Y.getValueInt(), AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_WIDTH.getValueInt(), AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_HEIGHT.getValueInt());
-            scrollPane.setViewportView(table);
+			TableColumn tc3 = table.getColumnModel().getColumn(2);
+			tc3.setPreferredWidth(140);
 
-            // botao Run
-            runButton.setText(AppletConfig.LABEL_DIALOG_BUTTON_RUN.getValue());
-            runButton.setFont(new Font(AppletConfig.CONFIG_DIALOG_FONT.getValue(), AppletConfig.CONFIG_DIALOG_FONT_STYLE.getValueInt(), AppletConfig.CONFIG_DIALOG_FONT_SIZE.getValueInt()));
-            runButton.setBounds(new Rectangle(AppletConfig.CONFIG_DIALOG_BUTTON_RUN_X.getValueInt(), AppletConfig.CONFIG_DIALOG_BUTTON_RUN_Y.getValueInt(), AppletConfig.CONFIG_DIALOG_BUTTON_RUN_WIDTH.getValueInt(), AppletConfig.CONFIG_DIALOG_BUTTON_RUN_HEIGHT.getValueInt()));
+			TableColumn tc4 = table.getColumnModel().getColumn(3);
+			tc4.setPreferredWidth(250);
 
-            // botao Cancel
-            cancelButton.setText(AppletConfig.LABEL_DIALOG_BUTTON_CANCEL.getValue());
-            cancelButton.setFont(new Font(AppletConfig.CONFIG_DIALOG_FONT.getValue(), AppletConfig.CONFIG_DIALOG_FONT_STYLE.getValueInt(), AppletConfig.CONFIG_DIALOG_FONT_SIZE.getValueInt()));
-            cancelButton.setBounds(new Rectangle(AppletConfig.CONFIG_DIALOG_BUTTON_CANCEL_X.getValueInt(), AppletConfig.CONFIG_DIALOG_BUTTON_CANCEL_Y.getValueInt(), AppletConfig.CONFIG_DIALOG_BUTTON_CANCEL_WIDTH.getValueInt(), AppletConfig.CONFIG_DIALOG_BUTTON_CANCEL_HEIGHT.getValueInt()));
+			// Configura o Painel
+			scrollPane.setBounds(AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_X.getValueInt(), AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_Y.getValueInt(),
+					AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_WIDTH.getValueInt(), AppletConfig.CONFIG_DIALOG_TABLE_CERTIFICATES_HEIGHT.getValueInt());
+			scrollPane.setViewportView(table);
 
-            this.add(scrollPane, null);
-            this.add(runButton, null);
-            this.add(cancelButton, null);
+			// botao Run
+			runButton.setText(AppletConfig.LABEL_DIALOG_BUTTON_RUN.getValue());
+			runButton.setFont(new Font(AppletConfig.CONFIG_DIALOG_FONT.getValue(), AppletConfig.CONFIG_DIALOG_FONT_STYLE.getValueInt(),
+					AppletConfig.CONFIG_DIALOG_FONT_SIZE.getValueInt()));
+			runButton.setBounds(new Rectangle(AppletConfig.CONFIG_DIALOG_BUTTON_RUN_X.getValueInt(), AppletConfig.CONFIG_DIALOG_BUTTON_RUN_Y.getValueInt(),
+					AppletConfig.CONFIG_DIALOG_BUTTON_RUN_WIDTH.getValueInt(), AppletConfig.CONFIG_DIALOG_BUTTON_RUN_HEIGHT.getValueInt()));
 
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-    }
+			// botao Cancel
+			cancelButton.setText(AppletConfig.LABEL_DIALOG_BUTTON_CANCEL.getValue());
+			cancelButton.setFont(new Font(AppletConfig.CONFIG_DIALOG_FONT.getValue(), AppletConfig.CONFIG_DIALOG_FONT_STYLE.getValueInt(),
+					AppletConfig.CONFIG_DIALOG_FONT_SIZE.getValueInt()));
+			cancelButton
+					.setBounds(new Rectangle(AppletConfig.CONFIG_DIALOG_BUTTON_CANCEL_X.getValueInt(),
+							AppletConfig.CONFIG_DIALOG_BUTTON_CANCEL_Y.getValueInt(), AppletConfig.CONFIG_DIALOG_BUTTON_CANCEL_WIDTH.getValueInt(),
+							AppletConfig.CONFIG_DIALOG_BUTTON_CANCEL_HEIGHT.getValueInt()));
 
-    /**
-     * Permite acesso ao objeto Table contendo a lista de certificados digitais
-     *
-     * @return A lista de certificados digitais
-     */
-    public JTable getTable() {
-        return this.table;
-    }
+			file.setText("Escolha o arquivo.");
+			file.setFont(new Font(AppletConfig.CONFIG_DIALOG_FONT.getValue(), AppletConfig.CONFIG_DIALOG_FONT_STYLE.getValueInt(),
+					AppletConfig.CONFIG_DIALOG_FONT_SIZE.getValueInt()));
+			file.setBounds(new Rectangle(275, 270, 150, 25));
 
-    /**
-     *
-     * @param key
-     */
-    public void addScrollPaneLineKeyListener(KeyListener key) {
-        table.addKeyListener(key);
-    }
+			file.setActionCommand("load");
+			file.addActionListener(this);
+			
+			
 
-    /**
-     * Adicionar um ActionListener ao botao "Run"
-     *
-     * @param action ActionListener
-     */
-    public void addButtonRunActionListener(ActionListener action) {
-        runButton.addActionListener(action);
-    }
+			getFileName().setText("Caminho do arquivo.");
+			getFileName().setFont(
+					new Font(AppletConfig.CONFIG_DIALOG_FONT.getValue(), AppletConfig.CONFIG_DIALOG_FONT_STYLE.getValueInt(),
+							AppletConfig.CONFIG_DIALOG_FONT_SIZE.getValueInt()));
+			getFileName().setBounds(new Rectangle(15, 300, 350, 25));
+			
+			// config.dialog.button-run.x=15
+			// config.dialog.button-run.y=270
+			// config.dialog.button-run.width=120
+			// config.dialog.button-run.height=25
+			//
+			// config.dialog.button-cancel.x=145
+			// config.dialog.button-cancel.y=270
+			// config.dialog.button-cancel.width=120
+			// config.dialog.button-cancel.height=25
 
-    /**
-     * Adicionar um ActionListener ao botao "Cancel"
-     *
-     * @param action ActionListener
-     */
-    public void addButtonCancelActionListener(ActionListener action) {
-        cancelButton.addActionListener(action);
-    }
+			this.add(scrollPane, null);
+			this.add(getFileName(), null);
+			this.add(file, null);
+			this.add(runButton, null);
+			this.add(cancelButton, null);
 
-    /**
-     * Retorna o keystore do dispositivo a partir do valor de pin
-     *
-     * @return
-     */
-    public KeyStore getKeyStore() {
-        try {
-            Cursor hourGlassCursor = new Cursor(Cursor.WAIT_CURSOR);
-            setCursor(hourGlassCursor);
-            KeyStoreLoader loader = KeyStoreLoaderFactory.factoryKeyStoreLoader();
-            loader.setCallbackHandler(new PinCallbackHandler());
-            keystore = loader.getKeyStore();
-            loaded = true;
-            return keystore;
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+	}
 
-        } catch (DriverNotAvailableException e) {
-            showError(AppletConfig.MESSAGE_ERROR_DRIVER_NOT_AVAILABLE.getValue());
-        } catch (PKCS11NotFoundException e) {
-            showError(AppletConfig.MESSAGE_ERROR_PKCS11_NOT_FOUND.getValue());
-        } catch (CertificateValidatorException e) {
-            showError(AppletConfig.MESSAGE_ERROR_LOAD_TOKEN.getValue());
-        } catch (InvalidPinException e) {
-            showError(AppletConfig.MESSAGE_ERROR_INVALID_PIN.getValue());
-        } catch (KeyStoreLoaderException ke) {
-            showError(ke.getMessage());
-        } catch (Exception ex) {
-            showError(AppletConfig.MESSAGE_ERROR_UNEXPECTED.getValue());
-        } finally {
-            Cursor hourGlassCursor = new Cursor(Cursor.DEFAULT_CURSOR);
-            setCursor(hourGlassCursor);
-        }
-        return null;
-    }
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		int returnVal = fileChooser.showOpenDialog(this);
 
-    /**
-     * Retorna o alias
-     *
-     * @return
-     */
-    public String getAlias() {
-        if (table.getModel().getRowCount() != 0) {
-            int row = table.getSelectedRow();
-            Item item = (Item) table.getModel().getValueAt(row, 0);
-            return item.getAlias();
-        } else {
-            return "";
-        }
-    }
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			File file = fileChooser.getSelectedFile();
+			// This is where a real application would open the file.
+			getFileName().setText(file.getAbsolutePath());
+		}
+	}
 
-    /**
-     * Exibe as mensagens de erro
-     *
-     * @param message
-     */
-    private void showError(String message) {
-        JOptionPane.showMessageDialog(this, message, AppletConfig.LABEL_DIALOG_OPTION_PANE_TITLE.getValue(), JOptionPane.ERROR_MESSAGE);
-    }
+	/**
+	 * Permite acesso ao objeto Table contendo a lista de certificados digitais
+	 *
+	 * @return A lista de certificados digitais
+	 */
+	public JTable getTable() {
+		return this.table;
+	}
 
-    /**
-     * Retorna o botao run
-     *
-     * @return
-     */
-    public JButton getRunButton() {
-        return runButton;
-    }
+	/**
+	 *
+	 * @param key
+	 */
+	public void addScrollPaneLineKeyListener(KeyListener key) {
+		table.addKeyListener(key);
+	}
 
-    /**
-     * Retorna as dimensoes padroes do panel
-     *
-     * @return
-     */
-    public Dimension getDimension() {
-        return new Dimension(AppletConfig.CONFIG_DIALOG_DIMENSION_WIDTH.getValueInt(), AppletConfig.CONFIG_DIALOG_DIMENSION_HEIGHT.getValueInt());
-    }
+	/**
+	 * Adicionar um ActionListener ao botao "Run"
+	 *
+	 * @param action
+	 *            ActionListener
+	 */
+	public void addButtonRunActionListener(ActionListener action) {
+		runButton.addActionListener(action);
+	}
+
+	/**
+	 * Adicionar um ActionListener ao botao "Cancel"
+	 *
+	 * @param action
+	 *            ActionListener
+	 */
+	public void addButtonCancelActionListener(ActionListener action) {
+		cancelButton.addActionListener(action);
+	}
+
+	/**
+	 * Retorna o keystore do dispositivo a partir do valor de pin
+	 *
+	 * @return
+	 */
+	public KeyStore getKeyStore() {
+		try {
+			Cursor hourGlassCursor = new Cursor(Cursor.WAIT_CURSOR);
+			setCursor(hourGlassCursor);
+			KeyStoreLoader loader = KeyStoreLoaderFactory.factoryKeyStoreLoader();
+			loader.setCallbackHandler(new PinCallbackHandler());
+			keystore = loader.getKeyStore();
+			loaded = true;
+			return keystore;
+
+		} catch (DriverNotAvailableException e) {
+			showError(AppletConfig.MESSAGE_ERROR_DRIVER_NOT_AVAILABLE.getValue());
+		} catch (PKCS11NotFoundException e) {
+			showError(AppletConfig.MESSAGE_ERROR_PKCS11_NOT_FOUND.getValue());
+		} catch (CertificateValidatorException e) {
+			showError(AppletConfig.MESSAGE_ERROR_LOAD_TOKEN.getValue());
+		} catch (InvalidPinException e) {
+			showError(AppletConfig.MESSAGE_ERROR_INVALID_PIN.getValue());
+		} catch (KeyStoreLoaderException ke) {
+			showError(ke.getMessage());
+		} catch (Exception ex) {
+			showError(AppletConfig.MESSAGE_ERROR_UNEXPECTED.getValue());
+		} finally {
+			Cursor hourGlassCursor = new Cursor(Cursor.DEFAULT_CURSOR);
+			setCursor(hourGlassCursor);
+		}
+		return null;
+	}
+
+	/**
+	 * Retorna o alias
+	 *
+	 * @return
+	 */
+	public String getAlias() {
+		if (table.getModel().getRowCount() != 0) {
+			int row = table.getSelectedRow();
+			Item item = (Item) table.getModel().getValueAt(row, 0);
+			return item.getAlias();
+		} else {
+			return "";
+		}
+	}
+
+	/**
+	 * Exibe as mensagens de erro
+	 *
+	 * @param message
+	 */
+	private void showError(String message) {
+		JOptionPane.showMessageDialog(this, message, AppletConfig.LABEL_DIALOG_OPTION_PANE_TITLE.getValue(), JOptionPane.ERROR_MESSAGE);
+	}
+
+	/**
+	 * Retorna o botao run
+	 *
+	 * @return
+	 */
+	public JButton getRunButton() {
+		return runButton;
+	}
+
+	/**
+	 * Retorna as dimensoes padroes do panel
+	 *
+	 * @return
+	 */
+	public Dimension getDimension() {
+		return new Dimension(AppletConfig.CONFIG_DIALOG_DIMENSION_WIDTH.getValueInt(), AppletConfig.CONFIG_DIALOG_DIMENSION_HEIGHT.getValueInt());
+	}
+
+	public JTextField getFileName() {
+		return fileName;
+	}
 
 }

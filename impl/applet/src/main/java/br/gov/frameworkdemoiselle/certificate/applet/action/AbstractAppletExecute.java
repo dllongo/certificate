@@ -179,7 +179,7 @@ public abstract class AbstractAppletExecute implements AppletExecute {
     }
 
     @Override
-    public abstract void execute(KeyStore keystore, String alias, Applet applet);
+    public abstract void execute(KeyStore keystore, String alias, Applet applet,String filePath);
 
     @Override
     public abstract void cancel(KeyStore keystore, String alias, Applet applet);

@@ -53,7 +53,7 @@ public interface AppletExecute {
      * que se deseja usar
      * @param applet O Applet que executará a ação
      */
-    public void execute(KeyStore keystore, String alias, Applet applet);
+    public void execute(KeyStore keystore, String alias, Applet applet, String filePath);
 
     /**
      * Acao a ser executada quando efetuado o cancelamento
